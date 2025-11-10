@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Albums</h2>
+
+{% for album in albums %}
+<section>
+    <h3>{{ album.AlbumTitle }} ({{ album.ReleaseYear }})</h3>
+    <h4>Bands</h4>
+    <ul>
+    {% for band in album.bands %}
+        <li><a href="{{ url_for('view_band', id=band.BandID) }}">{{ band.BandName }}</a> ({{ band.FormedYear }})</li>
+    {% endfor %}
+    </ul>
+</section>
+<hr>
+{% endfor %}
+{% endblock %}

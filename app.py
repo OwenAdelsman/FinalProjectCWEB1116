@@ -158,7 +158,7 @@ def edit_membership(id):
         flash('Membership updates', 'success')
         return redirect(url_for('view_by_band'))
 
-    return render_template('edit_membership.html', membership=membership, bands=bands, members=members)
+    return render_template('add_membership.html', membership=membership, bands=bands, members=members)
 
 
 @app.route('/memberships/delete/<int:id>')
