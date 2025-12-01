@@ -66,20 +66,6 @@ def index():
     return render_template('index.html')
 
 
-@app.route('/bands/add', methods=['GET', 'POST'])
-def add_band():
-    if request.method == 'POST':
-        new_band = Bands(
-            BandName=request.form['bandname'],
-            FormedYear=request.form['formedyear'],
-            HomeLocation=request.form['homelocation']
-        )
-        db.session.add(new_band)
-        db.session.commit()
-        return redirect(url_for('index'))
-    return render_template('add_band.html')
-
-
 @app.route('/members/add', methods=['GET', 'POST'])
 def add_member():
     bands = Bands.query.all()  # Students see querying with relationships
