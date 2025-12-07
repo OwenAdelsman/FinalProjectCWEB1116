@@ -8,7 +8,7 @@ load_dotenv()  # Reads from .env file
 app = Flask(__name__)
 
 # Using SQLite for student simplicity
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///rockbands-mm.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///frogblogs-mm.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY') or 'SECRET'
 
@@ -19,42 +19,35 @@ db = SQLAlchemy(app)
 # ==========================
 
 
-class Bands(db.Model):
-    BandID = db.Column(db.Integer, primary_key=True)
-    BandName = db.Column(db.String(80), nullable=False)
-    FormedYear = db.Column(db.Integer)
-    HomeLocation = db.Column(db.String(80))
-    # Relationship: One band has many members + albums
-    # members = db.relationship('Members', backref='band', lazy=True)
-    memberships = db.relationship('Memberships', backref='band', lazy=True)
-    albums = db.relationship('Albums', backref='band', lazy=True)
+class Blogs(db.Model):
+    BlogID = db.Column(db.Integer, primary_key=True)
+    BlogName = db.Column(db.String(80), nullable=False)
+    BlogFrog = db.Column(db.String(800), nullable=False)
+    memberships = db.relationship('Memberships', backref='blog', lazy=True)
+    users = db.relationship('Users', backref='blog', lazy=True)
 
 
-class Members(db.Model):
-    MemberID = db.Column(db.Integer, primary_key=True)
-    # BandID = db.Column(db.Integer, db.ForeignKey('bands.BandID'), nullable=False)
-    MemberName = db.Column(db.String(80), nullable=False)
-    MainPosition = db.Column(db.String(80))
-    memberships = db.relationship('Memberships', backref='member', lazy=True)
-
+class Comments(db.Model):
+    CommentID = db.Column(db.Integer, primary_key=True)
+    CommentFrog = db.Column(db.String(80), nullable=False)
+    memberships = db.relationship('Memberships', backref='comment', lazy=True)
 
 class Memberships(db.Model):
     MembershipID = db.Column(db.Integer, primary_key=True)
-    BandID = db.Column(db.Integer, db.ForeignKey(
-        'bands.BandID'), nullable=False)
-    MemberID = db.Column(db.Integer, db.ForeignKey(
-        'members.MemberID'), nullable=False)
+    BlogID = db.Column(db.Integer, db.ForeignKey(
+        'blogs.BlogID'), nullable=False)
+    CommentID = db.Column(db.Integer, db.ForeignKey(
+        'comments.CommentID'), nullable=False)
     StartYear = db.Column(db.Integer)
     EndYear = db.Column(db.Integer)  # NULL if still active
     Role = db.Column(db.Text)
 
 
-class Albums(db.Model):
-    AlbumID = db.Column(db.Integer, primary_key=True)
-    BandID = db.Column(db.Integer, db.ForeignKey(
-        'bands.BandID'), nullable=False)
-    AlbumTitle = db.Column(db.String(80), nullable=False)
-    ReleaseYear = db.Column(db.Integer)
+class Users(db.Model):
+    UserID = db.Column(db.Integer, primary_key=True)
+    BlogID = db.Column(db.Integer, db.ForeignKey(
+        'blogs.BlogID'))
+    UserName = db.Column(db.String(80))
 
 # ==========================
 # ROUTES
@@ -62,61 +55,67 @@ class Albums(db.Model):
 
 
 @app.route('/')
-def index():
-    return render_template('index.html')
+def froghome():
+    return render_template('froghome.html')
 
-
-@app.route('/members/add', methods=['GET', 'POST'])
-def add_member():
-    bands = Bands.query.all()  # Students see querying with relationships
+@app.route('/blogs/add', methods=['GET', 'POST'])
+def add_blog():
     if request.method == 'POST':
-        new_member = Members(
-            MemberName=request.form['membername'],
-            MainPosition=request.form['mainposition']
-            # BandID=request.form['bandid']
+        new_blog = Blogs(
+            BlogName=request.form['blogName'],
+            BlogFrog=request.form['blogFrog']
         )
-        db.session.add(new_member)
+        db.session.add(new_blog)
         db.session.commit()
-        return redirect(url_for('index'))
-    return render_template('add_member.html', bands=bands)
+        return redirect(url_for('froghome'))
+    return render_template('add_blog.html')
 
-
-@app.route('/albums/add', methods=['GET', 'POST'])
-def add_album():
-    bands = Bands.query.all()
+@app.route('/comments/add', methods=['GET', 'POST'])
+def add_comment():
+    blogs = Blogs.query.all()  
     if request.method == 'POST':
-        new_album = Albums(
-            AlbumTitle=request.form['albumtitle'],
-            ReleaseYear=request.form['releaseyear'],
-            BandID=request.form['bandid']
+        new_comment = Comments(
+            CommentFrog=request.form['commentFrog'],
         )
-        db.session.add(new_album)
+        db.session.add(new_comment)
         db.session.commit()
-        return redirect(url_for('index'))
-    return render_template('add_album.html', bands=bands)
+        return redirect(url_for('froghome'))
+    return render_template('add_comment.html', blogs=blogs)
 
 
-@app.route('/bands/view')
-def view_by_band():
-    bands = Bands.query.all()
-    return render_template('display_by_band.html', bands=bands)
+@app.route('/users/add', methods=['GET', 'POST'])
+def add_user():
+    blogs = Blogs.query.all()
+    if request.method == 'POST':
+        new_user = Users(
+            UserName=request.form['userName']
+        )
+        db.session.add(new_user)
+        db.session.commit()
+        return redirect(url_for('froghome'))
+    return render_template('add_user.html', blogs=blogs)
 
 
-@app.route('/bands/view/<int:id>')
-def view_band(id):
-    # Shows real database relationship querying
-    band = Bands.query.get_or_404(id)
-    return render_template('display_by_band.html', bands=[band])
+@app.route('/blogs/view')
+def display_by_blog():
+    blogs = Blogs.query.all()
+    return render_template('display_by_blog.html', blogs=blogs)
+
+
+@app.route('/blogs/view/<int:id>')
+def display_blog(id):
+    blog = Blogs.query.get_or_404(id)
+    return render_template('display_by_blog.html', blogs=[blog])
 
 
 @app.route('/memberships/add', methods=['GET', 'POST'])
-def add_membership():
-    bands = Bands.query.all()
-    members = Members.query.all()
+def add_commenttoblog():
+    blogs = Blogs.query.all()
+    comments = Comments.query.all()
     if request.method == 'POST':
         membership = Memberships(
-            BandID=request.form.get('bandid'),
-            MemberID=request.form.get('memberid'),
+            BlogID=request.form.get('blogid'),
+            CommentID=request.form.get('commentid'),
             Role=request.form.get('role'),
             StartYear=request.form.get('startyear') or None,
             EndYear=request.form.get('endyear') or None
@@ -124,27 +123,27 @@ def add_membership():
         db.session.add(membership)
         db.session.commit()
         flash('Membership assigned', 'success')
-        return redirect(url_for('view_by_band'))
-    return render_template('add_membership.html', bands=bands, members=members)
+        return redirect(url_for('display_by_blog'))
+    return render_template('add_commenttoblog.html', blogs=blogs, comments=comments)
 
 
 
 @app.route('/memberships/edit/<int:id>', methods=['GET', 'POST'])
 def edit_membership(id):
     membership = Memberships.query.get_or_404(id)
-    bands = Bands.query.all()
-    members = Members.query.all()
+    blogs = Blogs.query.all()
+    comments = Comments.query.all()
     if request.method == 'POST':
-        membership.BandID = request.form.get('bandid')
-        membership.MemberID = request.form.get('memberid')
+        membership.BlogID = request.form.get('blogid')
+        membership.CommentID = request.form.get('commentid')
         membership.Role = request.form.get('role')
         membership.StartYear = request.form.get('startyear') or None
         membership.EndYear = request.form.get('endyear') or None
         db.session.commit()
-        flash('Membership updates', 'success')
-        return redirect(url_for('view_by_band'))
+        flash('Comment updated', 'success')
+        return redirect(url_for('display_by_blog'))
 
-    return render_template('edit_membership.html', membership=membership, bands=bands, members=members)
+    return render_template('add_commenttoblog.html', membership=membership, blogs=blogs, comments=comments)
 
 
 @app.route('/memberships/delete/<int:id>')
@@ -152,8 +151,8 @@ def delete_membership(id):
     membership = Memberships.query.get_or_404(id)
     db.session.delete(membership)
     db.session.commit()
-    flash('Membership removed', 'success')
-    return redirect(url_for('view_by_band'))
+    flash('Comment removed', 'success')
+    return redirect(url_for('display_by_blog'))
 
 
 # Create DB if not exists

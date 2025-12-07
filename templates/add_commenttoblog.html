@@ -1,0 +1,20 @@
+{% extends "base.html" %} {% block content %}
+<h2>Assign Comment to Blog</h2>
+<form method="post" id="membershipForm">
+  <label>Post:</label>
+  <select name="blogid">
+    <option value="">-- select post --</option>
+    {% for blog in blogs %}
+    <option value="{{ blog.BlogID }}">{{ blog.BlogFrog }}</option>
+    {% endfor %}</select
+  ><br />
+  <label>Comment:</label>
+  <select name="commentid">
+    <option value="">-- select comment --</option>
+    {% for comment in comments %}
+    <option value="{{ comment.CommentID }}">{{ comment.CommentFrog }}</option>
+    {% endfor %}</select
+  ><br />
+  <button type="submit">Save Comments</button>
+</form>
+{% endblock %}
