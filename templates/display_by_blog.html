@@ -1,8 +1,9 @@
 {% extends "base.html" %} 
 {% block content %}
 <h2>Posts</h2>
-
-{% if blogs|length > 1 %}
+{% if not blogs %} 
+No blogs exist at this time
+{% elif blogs|length > 1 %}
   <section>
     <ul>
       {% for blog in blogs %}
