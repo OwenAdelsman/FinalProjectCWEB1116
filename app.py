@@ -22,32 +22,24 @@ db = SQLAlchemy(app)
 class Blogs(db.Model):
     BlogID = db.Column(db.Integer, primary_key=True)
     BlogName = db.Column(db.String(80), nullable=False)
-    BlogFrog = db.Column(db.String(800), nullable=False)
-    memberships = db.relationship('Memberships', backref='blog', lazy=True)
-    users = db.relationship('Users', backref='blog', lazy=True)
-
+    BlogFrog = db.Column(db.Text(800), nullable=False)
+    UserID = db.Column(db.Integer, db.ForeignKey(
+        'users.UserID'))
+    comments = db.relationship('Comments', backref='blogs', lazy=True)
 
 class Comments(db.Model):
     CommentID = db.Column(db.Integer, primary_key=True)
-    CommentFrog = db.Column(db.String(80), nullable=False)
-    memberships = db.relationship('Memberships', backref='comment', lazy=True)
-
-class Memberships(db.Model):
-    MembershipID = db.Column(db.Integer, primary_key=True)
+    CommentFrog = db.Column(db.Text(800), nullable=False)
+    UserID = db.Column(db.Integer, db.ForeignKey(
+        'users.UserID'))
     BlogID = db.Column(db.Integer, db.ForeignKey(
-        'blogs.BlogID'), nullable=False)
-    CommentID = db.Column(db.Integer, db.ForeignKey(
-        'comments.CommentID'), nullable=False)
-    StartYear = db.Column(db.Integer)
-    EndYear = db.Column(db.Integer)  # NULL if still active
-    Role = db.Column(db.Text)
-
+        'blogs.BlogID'))
 
 class Users(db.Model):
     UserID = db.Column(db.Integer, primary_key=True)
-    BlogID = db.Column(db.Integer, db.ForeignKey(
-        'blogs.BlogID'))
-    UserName = db.Column(db.String(80))
+    UserName = db.Column(db.String(80), nullable=False)
+    blogs = db.relationship('Blogs', backref='users', lazy=True)
+    comments = db.relationship('Comments', backref='users', lazy=True)
 
 # ==========================
 # ROUTES
@@ -58,34 +50,86 @@ class Users(db.Model):
 def froghome():
     return render_template('froghome.html')
 
+@app.route('/portfolio')
+def portfolio():
+    return render_template('portfolio.html')
+
 @app.route('/blogs/add', methods=['GET', 'POST'])
 def add_blog():
+    users = Users.query.all()
     if request.method == 'POST':
         new_blog = Blogs(
-            BlogName=request.form['blogName'],
-            BlogFrog=request.form['blogFrog']
+            BlogName=request.form.get('blogName'),
+            BlogFrog=request.form.get('blogFrog'),
+            UserID=request.form.get('userid')
         )
         db.session.add(new_blog)
         db.session.commit()
         return redirect(url_for('froghome'))
-    return render_template('add_blog.html')
+    return render_template('add_blog.html', users=users)
 
-@app.route('/comments/add', methods=['GET', 'POST'])
-def add_comment():
-    blogs = Blogs.query.all()  
+@app.route('/blogs/edit/<int:id>', methods=['GET', 'POST'])
+def edit_blog(id):
+    users=Users.query.all()
+    blog = Blogs.query.get_or_404(id)  
+    if request.method == 'POST':
+        blog.BlogName=request.form.get('blogName')
+        blog.BlogFrog=request.form.get('blogFrog')
+        blog.UserID=request.form.get('userid')
+        db.session.commit()
+        flash('Blog updated', 'success')
+        return redirect(url_for('display_by_blog'))
+    return render_template('add_blog.html', blog=blog, users=users)
+
+@app.route('/blogs/delete/<int:id>')
+def delete_blog(id):
+    blog = Blogs.query.get_or_404(id)
+    db.session.delete(blog)
+    db.session.commit()
+    flash('Blog removed', 'success')
+    return redirect(url_for('display_by_blog'))
+
+
+@app.route('/comments/add/<int:blogid>', methods=['GET', 'POST'])
+def add_comment(blogid):
+    users = Users.query.all()  
+    blog = Blogs.query.get_or_404(blogid)
     if request.method == 'POST':
         new_comment = Comments(
             CommentFrog=request.form['commentFrog'],
+            UserID=request.form.get('userid'), 
+            BlogID = blogid
         )
         db.session.add(new_comment)
         db.session.commit()
-        return redirect(url_for('froghome'))
-    return render_template('add_comment.html', blogs=blogs)
+        return redirect(url_for('display_by_blog'))
+    return render_template('add_comment.html', users=users, blog=blog)
+
+@app.route('/comments/edit/<int:id>', methods=['GET', 'POST'])
+def edit_comment(id):
+    users=Users.query.all()
+    comment = Comments.query.get_or_404(id)  
+    blog = Blogs.query.get_or_404(comment.BlogID)
+    if request.method == 'POST':
+        comment.CommentFrog=request.form['commentFrog']
+        comment.UserID=request.form.get('userid') 
+        db.session.commit()
+        flash('Comment updated', 'success')
+        return redirect(url_for('display_by_blog'))
+    return render_template('add_comment.html', comment=comment, users=users, blog=blog)
+
+@app.route('/comments/delete/<int:id>')
+def delete_comment(id):
+    comment = Comments.query.get_or_404(id)
+    db.session.delete(comment)
+    db.session.commit()
+    flash('Comment removed', 'success')
+    return redirect(url_for('display_by_blog'))
+
 
 
 @app.route('/users/add', methods=['GET', 'POST'])
 def add_user():
-    blogs = Blogs.query.all()
     if request.method == 'POST':
         new_user = Users(
             UserName=request.form['userName']
@@ -93,7 +137,7 @@ def add_user():
         db.session.add(new_user)
         db.session.commit()
         return redirect(url_for('froghome'))
-    return render_template('add_user.html', blogs=blogs)
+    return render_template('add_user.html')
 
 
 @app.route('/blogs/view')
@@ -106,53 +150,6 @@ def display_by_blog():
 def display_blog(id):
     blog = Blogs.query.get_or_404(id)
     return render_template('display_by_blog.html', blogs=[blog])
-
-
-@app.route('/memberships/add', methods=['GET', 'POST'])
-def add_commenttoblog():
-    blogs = Blogs.query.all()
-    comments = Comments.query.all()
-    if request.method == 'POST':
-        membership = Memberships(
-            BlogID=request.form.get('blogid'),
-            CommentID=request.form.get('commentid'),
-            Role=request.form.get('role'),
-            StartYear=request.form.get('startyear') or None,
-            EndYear=request.form.get('endyear') or None
-        )
-        db.session.add(membership)
-        db.session.commit()
-        flash('Membership assigned', 'success')
-        return redirect(url_for('display_by_blog'))
-    return render_template('add_commenttoblog.html', blogs=blogs, comments=comments)
-
-
-
-@app.route('/memberships/edit/<int:id>', methods=['GET', 'POST'])
-def edit_membership(id):
-    membership = Memberships.query.get_or_404(id)
-    blogs = Blogs.query.all()
-    comments = Comments.query.all()
-    if request.method == 'POST':
-        membership.BlogID = request.form.get('blogid')
-        membership.CommentID = request.form.get('commentid')
-        membership.Role = request.form.get('role')
-        membership.StartYear = request.form.get('startyear') or None
-        membership.EndYear = request.form.get('endyear') or None
-        db.session.commit()
-        flash('Comment updated', 'success')
-        return redirect(url_for('display_by_blog'))
-
-    return render_template('add_commenttoblog.html', membership=membership, blogs=blogs, comments=comments)
-
-
-@app.route('/memberships/delete/<int:id>')
-def delete_membership(id):
-    membership = Memberships.query.get_or_404(id)
-    db.session.delete(membership)
-    db.session.commit()
-    flash('Comment removed', 'success')
-    return redirect(url_for('display_by_blog'))
 
 
 # Create DB if not exists

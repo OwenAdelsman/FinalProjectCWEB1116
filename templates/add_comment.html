@@ -1,10 +1,18 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Frog Blog Comments</h2>
+<h2>Frog Blog Comments - Blog {{blog.BlogName}}</h2>
 <form method="POST">
 <div>
 <label for="commentFrog">Leave your comment here:</label>
-<textarea id="commentFrog" name="commentFrog" rows="3" placeholder="Leave your comment here"></textarea>
+<textarea id="commentFrog" name="commentFrog" rows="3" placeholder="Leave your comment here">{{comment.CommentFrog if comment}}</textarea>
+</div>
+<div>
+ <label>User:</label>
+  <select name="userid">
+    <option value="">-- select user --</option>
+    {% for user in users %}
+    <option value="{{ user.UserID }}" {{ 'selected' if comment and comment.UserID == user.UserID }}>{{ user.UserName }}</option>
+    {% endfor %}</select>
 </div>
 <button type="submit">Save</button>
 </form>

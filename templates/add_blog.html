@@ -2,13 +2,22 @@
 {% block content %}
 <h2>Make your post</h2>
 <form method="post" id="blogForm">
-<div>
- <label>Title:</label><input type="text" name="blogName"><br>    
-</div>    
-<div>
-<label for="blogFrog">Leave your comment here:</label>
-<textarea id="blogFrog" name="blogFrog" rows="3" placeholder="Write your post here"></textarea>
-</div>
-<button type="submit">Save</button>
+    <div>
+        <label>Title:</label><input type="text" name="blogName" value="{{blog.BlogName if blog}}"><br>    
+    </div> 
+    <div>
+        <label for="blogFrog">Write your post here:</label>
+        <textarea id="blogFrog" name="blogFrog" rows="3" placeholder="Write your post here">{{blog.BlogFrog if blog}}</textarea>
+    </div>
+    <div>
+        <label>User:</label>
+        <select name="userid">
+            <option value="">-- select user --</option>
+            {% for user in users %}
+            <option value="{{ user.UserID }}" {{ 'selected' if blog and blog.UserID == user.UserID }}>{{ user.UserName }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <button type="submit">Save</button>
 </form>
 {% endblock %}

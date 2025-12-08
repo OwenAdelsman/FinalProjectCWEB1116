@@ -9,15 +9,16 @@
     <script src="{{ url_for('static', filename='scripts.js') }}" defer></script>
   </head>
   <body>
+    <div class="top-banner">
+        <b>Collection of Immaculate Frog Themed Blogs</b>
+    </div>
     <header>
-      <h1>Collection of Immaculate Frog Themed Blogs</h1>
       <nav>
         <a href="{{ url_for('froghome') }}">Home</a> |
         <a href="{{ url_for('add_blog') }}">Add Blog</a> |
         <a href="{{ url_for('add_user') }}">Add User</a> |
-        <a href="{{ url_for('add_comment') }}">Add Comment</a> |
-        <a href="{{ url_for('add_commenttoblog') }}">Add Comment to Blog</a> |
-        <a href="{{ url_for('display_by_blog') }}">View Blog Info</a>
+        <a href="{{ url_for('display_by_blog') }}">View Blog Posts</a> |
+        <a href="{{ url_for('portfolio') }}">My Portfolio</a>
       </nav>
     </header>
     <main>

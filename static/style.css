@@ -1,4 +1,19 @@
-body { font-family: Arial, sans-serif; margin: 20px; }
-header { margin-bottom: 20px; }
+body {  background-color: rgb(9, 141, 68); font-family: Arial, sans-serif}
+h1 { color: rgb(0, 0, 0); }
+header { color: rgb(0, 0, 0); margin-bottom: 20px; }
 label { width: 120px; display: inline-block; }
 button { margin-top: 10px; }
+p {
+  color: rgb(0, 0, 0);
+}
+.top-banner {
+    background-color: #063c13; 
+    color: #000000; 
+    padding: 10px 20px; 
+    text-align: center; 
+    font-size: 32px; 
+    top: 0; 
+    width: 100%; 
+    box-sizing: border-box; 
+    z-index: 1000; 
+}

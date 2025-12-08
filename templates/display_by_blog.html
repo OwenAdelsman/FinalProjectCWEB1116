@@ -1,31 +1,36 @@
-{% extends "base.html" %} {% block content %}
+{% extends "base.html" %} 
+{% block content %}
 <h2>Posts</h2>
 
-{% for blog in blogs %}
-<section>
-  <h3>
-    {{ blog.BlogName }} ({{ blog.BlogFrog }}) {#
-    <a href="{{url_for('edit_blog', id=blog.BlogID)}}">Edit</a>
-    <a href="{{url_for('delete_blog', id=blog.BlogID)}}">Delete</a> #}
-    </h3>
-  <h4>Comments</h4>
-  <ul>
-    {% for m in blog.memberships %}
-    <li>
-      {{ m.comment.CommentFrog }} &nbsp;
-      <a href="{{ url_for('edit_membership', id=m.MembershipID) }}">Edit</a> |
-      <a href="{{ url_for('delete_membership', id=m.MembershipID) }}">Delete</a>
-    </li>
-    {% else %}
-    <li><em>No members assigned yet</em></li>
-    {% endfor %}
-  </ul>
-
-  <h4>Users</h4>
-  <ul>
-    {% for user in blog.users %}
-    {% endfor %}
-  </ul>
-</section>
-<hr />
-{% endfor %} {% endblock %}
+{% if blogs|length > 1 %}
+  <section>
+    <ul>
+      {% for blog in blogs %}
+        <li><a href="{{url_for('display_blog', id=blog.BlogID)}}">{{ blog.BlogName }} by {{blog.users.UserName}}</a></li>
+      {% endfor %}
+    </ul>
+  </section>
+{% else %}
+  <section>
+    <h3>
+      {{ blogs[0].BlogName }} by {{blogs[0].users.UserName}}
+      </h3>
+      {{ blogs[0].BlogFrog }} 
+      <a href="{{url_for('edit_blog', id=blogs[0].BlogID)}}">Edit</a> |
+      <a href="{{url_for('delete_blog', id=blogs[0].BlogID)}}">Delete</a> 
+    <h4>Comments</h4>
+    <ul>
+      {% for m in blogs[0].comments %}
+      <li>
+        {{m.users.UserName}} says: {{ m.CommentFrog }} &nbsp;
+        <a href="{{ url_for('edit_comment', id=m.CommentID) }}">Edit</a> |
+        <a href="{{ url_for('delete_comment', id=m.CommentID) }}">Delete</a>
+      </li>
+      {% else %}
+      <li><em>No comments yet</em></li>
+      {% endfor %}
+      <li><a href="{{ url_for('add_comment', blogid=blogs[0].BlogID) }}">Add</a></li>
+    </ul>
+  </section>
+{% endif %}
+{% endblock %}
